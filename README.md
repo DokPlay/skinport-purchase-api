@@ -50,7 +50,7 @@ docker compose up -d
 Apply the schema and seed demo data (inserts are idempotent thanks to unique constraints on usernames and product names):
 
 ```bash
-psql "${DATABASE_URL:-postgres://postgres:postgres@localhost:5432/skinport}" -f schema.sql
+docker compose exec -T postgres psql -U postgres -d skinport < schema.sql
 ```
 
 ### 4) Run the app
