@@ -1,8 +1,8 @@
 import { FastifyInstance } from 'fastify';
 import { getDbClient } from '../db.js';
+import { env } from '../env.js';
 
 interface PurchaseRequestBody {
-  userId: number;
   productId: number;
 }
 
@@ -25,6 +25,24 @@ interface PurchaseResponse {
 interface ErrorResponse {
   error: string;
 }
+
+const authenticateUser = (authorizationHeader: string | undefined): number | null => {
+  if (!authorizationHeader) {
+    return null;
+  }
+
+  const [scheme, token] = authorizationHeader.split(' ');
+  if (!scheme || !token || scheme.toLowerCase() !== 'bearer') {
+    return null;
+  }
+
+  const userId = env.userApiKeys[token];
+  if (!userId) {
+    return null;
+  }
+
+  return userId;
+};
 
 // Guard helper to ensure IDs are positive integers before hitting the database.
 const isValidId = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value > 0;
@@ -52,9 +70,8 @@ export const registerPurchaseRoutes = async (fastify: FastifyInstance): Promise<
         tags: ['purchase'],
         body: {
           type: 'object',
-          required: ['userId', 'productId'],
+          required: ['productId'],
           properties: {
-            userId: { type: 'integer', minimum: 1 },
             productId: { type: 'integer', minimum: 1 }
           }
         },
@@ -68,6 +85,13 @@ export const registerPurchaseRoutes = async (fastify: FastifyInstance): Promise<
             }
           },
           400: {
+            type: 'object',
+            required: ['error'],
+            properties: {
+              error: { type: 'string' }
+            }
+          },
+          401: {
             type: 'object',
             required: ['error'],
             properties: {
@@ -93,11 +117,17 @@ export const registerPurchaseRoutes = async (fastify: FastifyInstance): Promise<
     },
     async (request, reply) => {
       try {
-        const { userId, productId } = request.body ?? {};
+        const userId = authenticateUser(request.headers.authorization);
+        if (!userId) {
+          reply.status(401);
+          return { error: 'Unauthorized' };
+        }
 
-        if (!isValidId(userId) || !isValidId(productId)) {
+        const { productId } = request.body ?? {};
+
+        if (!isValidId(productId)) {
           reply.status(400);
-          return { error: 'userId and productId must be positive integers' };
+          return { error: 'productId must be a positive integer' };
         }
 
         const updatedUser = await db.begin(async (tx) => {

@@ -48,6 +48,41 @@ const positiveInteger = (value: string | undefined, name: string, fallback: stri
   return parsed;
 };
 
+const parseApiKeyMappings = (
+  value: string | undefined,
+  name: string,
+  fallback: string
+): Record<string, number> => {
+  const raw = required(value, name, fallback);
+  const mappings = raw
+    .split(',')
+    .map((pair) => pair.trim())
+    .filter((pair) => pair.length > 0);
+
+  if (mappings.length === 0) {
+    throw new Error(`${name} must contain at least one token:userId mapping`);
+  }
+
+  const result: Record<string, number> = {};
+
+  for (const mapping of mappings) {
+    const [token, idString] = mapping.split(':').map((value) => value?.trim());
+
+    if (!token || !idString) {
+      throw new Error(`${name} entries must be in the form token:userId`);
+    }
+
+    const id = Number.parseInt(idString, 10);
+    if (!Number.isFinite(id) || id <= 0) {
+      throw new Error(`${name} userId must be a positive integer`);
+    }
+
+    result[token] = id;
+  }
+
+  return result;
+};
+
 // Centralised configuration so runtime options are defined in one place.
 export const env = {
   port: positiveInteger(process.env.PORT, 'PORT', '3000'),
@@ -59,5 +94,10 @@ export const env = {
   ),
   redisUrl: required(process.env.REDIS_URL, 'REDIS_URL', 'redis://localhost:6379'),
   databaseUrl: required(process.env.DATABASE_URL, 'DATABASE_URL', 'postgres://postgres:postgres@localhost:5432/skinport'),
-  cacheTtlSeconds: positiveInteger(process.env.ITEM_CACHE_TTL, 'ITEM_CACHE_TTL', '300')
+  cacheTtlSeconds: positiveInteger(process.env.ITEM_CACHE_TTL, 'ITEM_CACHE_TTL', '300'),
+  userApiKeys: parseApiKeyMappings(
+    process.env.USER_API_KEYS,
+    'USER_API_KEYS',
+    'demo_token:1,collector_token:2'
+  )
 };

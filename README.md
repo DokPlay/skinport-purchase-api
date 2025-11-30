@@ -27,6 +27,8 @@ DATABASE_URL=postgres://postgres:postgres@localhost:5432/skinport
 REDIS_URL=redis://localhost:6379
 SKINPORT_API_URL=https://api.skinport.com/v1/items
 ITEM_CACHE_TTL=300
+# Demo tokens mapped to user IDs for purchase authentication
+USER_API_KEYS=demo_token:1,collector_token:2
 ```
 
 > **Security note:** `SKINPORT_API_URL` must be an `https://` URL pointing to `api.skinport.com`; other hosts are rejected to avoid
@@ -68,13 +70,14 @@ npm start
 Returns an array with minimal prices for tradable and non-tradable variants of each Skinport item. Responses are cached in Redis for `ITEM_CACHE_TTL` seconds.
 
 ### `POST /purchase`
+Headers:
+
+- `Authorization: Bearer <token>` — tokens are configured in `USER_API_KEYS` and mapped to user IDs.
+
 Body:
 
 ```json
-{
-  "userId": 1,
-  "productId": 2
-}
+{ "productId": 2 }
 ```
 
-Performs a transactional purchase, deducts the product price from the user balance, records the purchase, and responds with the updated balance.
+Performs a transactional purchase on behalf of the authenticated user, deducts the product price from the user balance, records the purchase, and responds with the updated balance.
