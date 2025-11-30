@@ -1,5 +1,7 @@
 # Skinport Purchase API
 
+[Русская версия](./README.ru.md)
+
 Simple Fastify server in TypeScript exposing two endpoints:
 
 - **GET `/items`** — Fetches Skinport items, returns the minimal tradable and non-tradable prices for each item, and caches the response in Redis.
@@ -13,17 +15,17 @@ Simple Fastify server in TypeScript exposing two endpoints:
 
 ## Quick start
 
-1. Install dependencies: ##from the project folder 
-CMD
+1. Install dependencies:
 
-   ```bash 
-   npm install 
+   CMD
+
+   ```bash
+   npm install
    ```
 
 2. Configure the environment by copying `.env.example` to `.env` (defaults work for local demos):
 
    ```bash
-
    PORT=3000
    DATABASE_URL=postgres://postgres:postgres@localhost:5432/skinport
    REDIS_URL=redis://localhost:6379
@@ -38,13 +40,17 @@ CMD
    > **Security note:** `SKINPORT_API_URL` must be an `https://` URL pointing to `api.skinport.com`; other hosts are rejected to avoid accidentally proxying requests to untrusted destinations.
 
 3. Start dependencies (PostgreSQL + Redis):
-CMD
+
+   CMD
+
    ```bash
    docker compose up -d
    ```
 
 4. Apply the schema and seed demo data (inserts are idempotent thanks to unique constraints on usernames and product names):
-CMD
+
+   CMD
+
    ```bash
    docker compose exec -T postgres psql -U postgres -d skinport < schema.sql
    ```
@@ -56,30 +62,62 @@ CMD
    ```
 
 5. Run the API (development mode):
-CMD
+
+   CMD
+
    ```bash
    npm run dev
    ```
 
-   Interactive API docs:
+   Interactive API docs: http://localhost:3000/docs
 
-   
-   open http://localhost:3000/docs
-   
+6. Production build (do not run dev and prod servers simultaneously):
 
-   ##Production build: ##do not run both separately
+   CMD
 
    ```bash
    npm run build
    npm start
    ```
+
+## Skinport API usage
+
+Skinport requires Brotli compression for the `/v1/items` endpoint. Always send `Accept-Encoding: br` or the API will reply with `406 not_acceptable`. A minimal fetch example:
+
+```ts
+const url = new URL('https://api.skinport.com/v1/items');
+url.searchParams.set('app_id', '730');
+url.searchParams.set('currency', 'EUR');
+
+const response = await fetch(url, {
+  method: 'GET',
+  headers: {
+    'Accept-Encoding': 'br',
+    Accept: 'application/json'
+  }
+});
+
+if (!response.ok) {
+  throw new Error(`Skinport API responded with ${response.status}`);
+}
+
+const data = await response.json();
+```
+
+> **Tip:** Older cURL builds (notably on Windows) may not support Brotli. Use Node 18+ (which supports Brotli by default) or a cURL build with `--compressed` + `-H "Accept-Encoding: br"` on platforms that support it.
+
 ## Quick demo with curl
 
-With the default `.env` and seeded data, try the endpoints using the demo API key (`demo_token` maps to user `1`):
+With the default `.env` and seeded data, try the endpoints using the demo API key (`demo_token` maps to user `1`). Be sure to include Brotli compression when hitting `/items`.
+
+CMD
 
 ```bash
-curl -H "Authorization: Bearer demo_token" http://localhost:3000/items
+curl --compressed -H "Accept-Encoding: br" -H "Authorization: Bearer demo_token" http://localhost:3000/items
 ```
+
+CMD
+
 ```bash
 curl -X POST \
   -H "Authorization: Bearer demo_token" \

@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import type { RedisClientType } from 'redis';
 import { env } from '../env.js';
 import { getRedisClient } from '../redisClient.js';
@@ -81,7 +81,7 @@ const aggregatePrices = (items: SkinportItem[]): ItemPriceSummary[] => {
 };
 
 // Fetch item prices from Skinport and return a normalised summary.
-const fetchItemPrices = async (): Promise<ItemPriceSummary[]> => {
+const fetchItemPrices = async (logger: FastifyBaseLogger): Promise<ItemPriceSummary[]> => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), SKINPORT_FETCH_TIMEOUT_MS);
 
@@ -100,6 +100,7 @@ const fetchItemPrices = async (): Promise<ItemPriceSummary[]> => {
     });
 
     if (!response.ok) {
+      logger.error({ status: response.status, statusText: response.statusText }, 'Skinport API error');
       throw new Error(`Skinport API responded with ${response.status}`);
     }
 
@@ -187,7 +188,7 @@ export const registerItemRoutes = async (fastify: FastifyInstance): Promise<void
       }
 
       try {
-        const items = await fetchItemPrices();
+        const items = await fetchItemPrices(fastify.log);
 
         if (redis) {
           try {
