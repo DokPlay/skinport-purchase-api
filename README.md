@@ -19,9 +19,11 @@ Install dependencies:
 npm install
 ```
 
-Create an `.env` file (optional, defaults are provided, see `.env.example`):
+Copy `.env.example` to `.env` (values are provided for local demos):
 
 ```
+cp .env.example .env
+
 PORT=3000
 DATABASE_URL=postgres://postgres:postgres@localhost:5432/skinport
 REDIS_URL=redis://localhost:6379
@@ -31,6 +33,9 @@ ITEM_CACHE_TTL=300
 USER_API_KEYS=demo_token:1,collector_token:2
 ```
 
+> **Auth note:** The Bearer token mapping in `USER_API_KEYS` is a simple demo mechanism to authenticate purchases; populate the
+> variable with any `token:userId` pairs you like for local testing.
+>
 > **Security note:** `SKINPORT_API_URL` must be an `https://` URL pointing to `api.skinport.com`; other hosts are rejected to avoid
 > accidentally proxying requests to untrusted destinations.
 
@@ -62,6 +67,20 @@ Build and start:
 ```bash
 npm run build
 npm start
+```
+
+## Quick demo with curl
+
+With the default `.env` and seeded data, you can try the endpoints using the demo API key (`demo_token` maps to user `1`):
+
+```bash
+curl -H "Authorization: Bearer demo_token" http://localhost:3000/items
+
+curl -X POST \
+  -H "Authorization: Bearer demo_token" \
+  -H "Content-Type: application/json" \
+  -d '{"productId":1}' \
+  http://localhost:3000/purchase
 ```
 
 ## Endpoints
