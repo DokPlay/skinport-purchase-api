@@ -15,7 +15,7 @@ Simple Fastify server in TypeScript exposing two endpoints:
 
 ### 1) Install dependencies
 
-```bash
+```powershell
 npm install
 ```
 
@@ -23,8 +23,8 @@ npm install
 
 Copy `.env.example` to `.env` and adjust if needed (defaults work for local demos):
 
-```bash
-cp .env.example .env
+```powershell
+Copy-Item .env.example .env
 
 PORT=3000
 DATABASE_URL=postgres://postgres:postgres@localhost:5432/skinport
@@ -43,14 +43,15 @@ USER_API_KEYS=demo_token:1,collector_token:2
 
 Spin up PostgreSQL and Redis with Docker Compose:
 
-```bash
+```powershell
 docker compose up -d
 ```
 
 Apply the schema and seed demo data (inserts are idempotent thanks to unique constraints on usernames and product names):
 
-```bash
-docker compose exec -T postgres psql -U postgres -d skinport < schema.sql
+```powershell
+# PowerShell needs a pipe instead of input redirection
+Get-Content ./schema.sql | docker compose exec -T postgres psql -U postgres -d skinport
 ```
 
 ### 4) Run the app
