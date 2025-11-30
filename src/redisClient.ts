@@ -41,3 +41,14 @@ export const getRedisClient = async (): Promise<RedisClientType> => {
 
   return client;
 };
+
+export const closeRedisClient = async (): Promise<void> => {
+  try {
+    await client?.quit();
+  } catch (error) {
+    console.error('Failed to close Redis client during shutdown:', error);
+  } finally {
+    client = null;
+    connectPromise = null;
+  }
+};

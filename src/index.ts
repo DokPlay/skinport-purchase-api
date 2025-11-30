@@ -1,5 +1,7 @@
 import Fastify from 'fastify';
+import { closeDbClient } from './db.js';
 import { env } from './env.js';
+import { closeRedisClient } from './redisClient.js';
 import { registerItemRoutes } from './routes/items.js';
 import { registerPurchaseRoutes } from './routes/purchase.js';
 
@@ -17,13 +19,40 @@ const buildServer = () => {
 // Start the HTTP server unless we are running in a test environment.
 const start = async () => {
   const server = buildServer();
+  let shuttingDown = false;
+
+  const shutdown = async (signal?: string, exitCode = 0) => {
+    if (shuttingDown) {
+      return;
+    }
+
+    shuttingDown = true;
+    server.log.info({ signal }, 'Shutting down server');
+
+    try {
+      await server.close();
+    } catch (error) {
+      server.log.error({ err: error }, 'Error while closing HTTP server');
+    }
+
+    await Promise.allSettled([closeRedisClient(), closeDbClient()]);
+
+    process.exit(exitCode);
+  };
+
+  process.once('SIGINT', () => {
+    void shutdown('SIGINT');
+  });
+  process.once('SIGTERM', () => {
+    void shutdown('SIGTERM');
+  });
 
   try {
     await server.listen({ port: env.port, host: '0.0.0.0' });
     console.log(`Server is running on port ${env.port}`);
   } catch (error) {
     server.log.error(error);
-    process.exit(1);
+    await shutdown('STARTUP_ERROR', 1);
   }
 };
 

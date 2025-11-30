@@ -17,3 +17,16 @@ export const getDbClient = (): DbClient => {
 
   return client;
 };
+
+// Close the shared Postgres client to allow graceful shutdowns.
+export const closeDbClient = async (): Promise<void> => {
+  if (!client) {
+    return;
+  }
+
+  try {
+    await client.end({});
+  } finally {
+    client = null;
+  }
+};
