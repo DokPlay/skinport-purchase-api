@@ -2,6 +2,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Read an environment variable or fall back to a sensible default.
+// Throws when no value is provided and no fallback is defined, making failures explicit on boot.
 const required = (value: string | undefined, name: string, fallback?: string): string => {
   if (value && value.trim().length > 0) {
     return value;
@@ -14,6 +16,7 @@ const required = (value: string | undefined, name: string, fallback?: string): s
   throw new Error(`Environment variable ${name} is required`);
 };
 
+// Centralised configuration so runtime options are defined in one place.
 export const env = {
   port: Number.parseInt(process.env.PORT ?? '3000', 10),
   skinportApiUrl: required(process.env.SKINPORT_API_URL, 'SKINPORT_API_URL', 'https://api.skinport.com/v1/items'),

@@ -3,6 +3,7 @@ import { env } from './env.js';
 import { registerItemRoutes } from './routes/items.js';
 import { registerPurchaseRoutes } from './routes/purchase.js';
 
+// Build a Fastify instance with all routes and shared configuration.
 const buildServer = () => {
   const server = Fastify({ logger: true });
 
@@ -13,6 +14,7 @@ const buildServer = () => {
   return server;
 };
 
+// Start the HTTP server unless we are running in a test environment.
 const start = async () => {
   const server = buildServer();
 

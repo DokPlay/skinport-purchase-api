@@ -3,6 +3,7 @@ import { env } from './env.js';
 
 let client: RedisClientType | null = null;
 
+// Lazily create and share a Redis client across the process.
 export const getRedisClient = (): RedisClientType => {
   if (client) {
     return client;

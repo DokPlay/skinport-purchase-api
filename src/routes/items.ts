@@ -18,6 +18,7 @@ const ITEMS_CACHE_KEY = 'items:min-prices';
 
 const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 
+// Validate and normalise the Skinport response before aggregating it.
 const normalizeItems = (payload: unknown): SkinportItem[] => {
   if (!Array.isArray(payload)) {
     return [];
@@ -46,6 +47,7 @@ const normalizeItems = (payload: unknown): SkinportItem[] => {
   return items;
 };
 
+// Build a per-market-hash summary of tradable/non-tradable minimum prices.
 const aggregatePrices = (items: SkinportItem[]): ItemPriceSummary[] => {
   const map = new Map<string, ItemPriceSummary>();
 
@@ -72,6 +74,7 @@ const aggregatePrices = (items: SkinportItem[]): ItemPriceSummary[] => {
   return Array.from(map.values());
 };
 
+// Fetch item prices from Skinport and return a normalised summary.
 const fetchItemPrices = async (): Promise<ItemPriceSummary[]> => {
   const url = `${env.skinportApiUrl}?app_id=730&currency=EUR`;
   const response = await fetch(url);
@@ -90,6 +93,7 @@ const fetchItemPrices = async (): Promise<ItemPriceSummary[]> => {
   return aggregatePrices(items);
 };
 
+// Expose an endpoint to read cached item prices, falling back to live API data when needed.
 export const registerItemRoutes = async (fastify: FastifyInstance): Promise<void> => {
   const redis = getRedisClient();
 

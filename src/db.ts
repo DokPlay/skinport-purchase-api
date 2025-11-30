@@ -5,6 +5,7 @@ export type DbClient = Sql<{}>;
 
 let client: DbClient | null = null;
 
+// Lazily initialise a singleton Postgres client for reuse across requests.
 export const getDbClient = (): DbClient => {
   if (client) {
     return client;

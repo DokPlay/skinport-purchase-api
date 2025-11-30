@@ -17,8 +17,10 @@ interface DbProduct {
   name: string;
 }
 
+// Guard helper to ensure IDs are positive integers before hitting the database.
 const isValidId = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value > 0;
 
+// Expose a transactional purchase endpoint that debits balance and records the purchase atomically.
 export const registerPurchaseRoutes = async (fastify: FastifyInstance): Promise<void> => {
   const db = getDbClient();
 
