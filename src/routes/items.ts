@@ -16,6 +16,36 @@ export interface ItemPriceSummary {
 
 const ITEMS_CACHE_KEY = 'items:min-prices';
 
+const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+
+const normalizeItems = (payload: unknown): SkinportItem[] => {
+  if (!Array.isArray(payload)) {
+    return [];
+  }
+
+  const items: SkinportItem[] = [];
+
+  for (const entry of payload) {
+    if (entry === null || typeof entry !== 'object') {
+      continue;
+    }
+
+    const { market_hash_name, min_price, tradable } = entry as Partial<SkinportItem> & Record<string, unknown>;
+
+    if (typeof market_hash_name !== 'string' || !isFiniteNumber(min_price) || typeof tradable !== 'boolean') {
+      continue;
+    }
+
+    items.push({
+      market_hash_name,
+      min_price,
+      tradable
+    });
+  }
+
+  return items;
+};
+
 const aggregatePrices = (items: SkinportItem[]): ItemPriceSummary[] => {
   const map = new Map<string, ItemPriceSummary>();
 
@@ -50,30 +80,51 @@ const fetchItemPrices = async (): Promise<ItemPriceSummary[]> => {
     throw new Error(`Skinport API responded with ${response.status}`);
   }
 
-  const payload = (await response.json()) as SkinportItem[];
-  return aggregatePrices(payload);
+  const payload = await response.json();
+  const items = normalizeItems(payload);
+
+  if (items.length === 0) {
+    throw new Error('No valid items returned from Skinport API');
+  }
+
+  return aggregatePrices(items);
 };
 
 export const registerItemRoutes = async (fastify: FastifyInstance): Promise<void> => {
   const redis = getRedisClient();
 
   fastify.get('/items', async (request, reply) => {
+    let cachedItems: ItemPriceSummary[] | null = null;
+
     try {
       const cached = await redis.get(ITEMS_CACHE_KEY);
 
       if (cached) {
-        return JSON.parse(cached) as ItemPriceSummary[];
+        cachedItems = JSON.parse(cached) as ItemPriceSummary[];
       }
+    } catch (error) {
+      fastify.log.warn({ err: error }, 'Failed to read from Redis cache');
+    }
 
+    if (cachedItems) {
+      return cachedItems;
+    }
+
+    try {
       const items = await fetchItemPrices();
-      await redis.set(ITEMS_CACHE_KEY, JSON.stringify(items), {
-        EX: env.cacheTtlSeconds
-      });
+
+      try {
+        await redis.set(ITEMS_CACHE_KEY, JSON.stringify(items), {
+          EX: env.cacheTtlSeconds
+        });
+      } catch (error) {
+        fastify.log.warn({ err: error }, 'Failed to write items to Redis cache');
+      }
 
       return items;
     } catch (error) {
       fastify.log.error(error);
-      reply.status(500);
+      reply.status(502);
       return { error: 'Unable to fetch item prices' };
     }
   });
