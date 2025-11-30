@@ -29,6 +29,9 @@ SKINPORT_API_URL=https://api.skinport.com/v1/items
 ITEM_CACHE_TTL=300
 ```
 
+> **Security note:** `SKINPORT_API_URL` must be an `https://` URL pointing to `api.skinport.com`; other hosts are rejected to avoid
+> accidentally proxying requests to untrusted destinations.
+
 You can also start local dependencies with Docker Compose (PostgreSQL + Redis):
 
 ```bash

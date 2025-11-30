@@ -85,7 +85,10 @@ const fetchItemPrices = async (): Promise<ItemPriceSummary[]> => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), SKINPORT_FETCH_TIMEOUT_MS);
 
-  const url = `${env.skinportApiUrl}?app_id=730&currency=EUR`;
+  const url = new URL(env.skinportApiUrl);
+  url.searchParams.set('app_id', '730');
+  url.searchParams.set('currency', 'EUR');
+
   try {
     const response = await fetch(url, { signal: controller.signal });
 
