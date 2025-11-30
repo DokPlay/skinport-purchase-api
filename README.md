@@ -2,10 +2,10 @@
 
 [Русская версия](./README.ru.md)
 
-Simple Fastify server in TypeScript exposing two endpoints:
+A compact Fastify service written in strict TypeScript with two core endpoints:
 
-- **GET `/items`** — Fetches Skinport items, returns the minimal tradable and non-tradable prices for each item, and caches the response in Redis.
-- **POST `/purchase`** — Processes a purchase of a product from the local database, records the purchase, and returns the updated user balance.
+- **GET `/items`** — Fetches Skinport items with default `app_id`/`currency`, returns the minimal tradable and non-tradable prices per item, and caches the response in Redis.
+- **POST `/purchase`** — Processes a transactional purchase from the local database, records it, and returns the updated user balance.
 
 ## Requirements
 
@@ -15,7 +15,7 @@ Simple Fastify server in TypeScript exposing two endpoints:
 
 ## Quick start
 
-1. Install dependencies:
+1. Install dependencies.
 
    CMD
 
@@ -23,7 +23,7 @@ Simple Fastify server in TypeScript exposing two endpoints:
    npm install
    ```
 
-2. Configure the environment by copying `.env.example` to `.env` (defaults work for local demos):
+2. Configure the environment by copying `.env.example` to `.env` (defaults support local demos):
 
    ```bash
    PORT=3000
@@ -35,11 +35,11 @@ Simple Fastify server in TypeScript exposing two endpoints:
    USER_API_KEYS=demo_token:1,collector_token:2
    ```
 
-   > **Auth note:** The Bearer token mapping in `USER_API_KEYS` is a simple demo mechanism to authenticate purchases; populate the variable with any `token:userId` pairs you like for local testing.
+   > **Auth note:** The `USER_API_KEYS` variable maps Bearer tokens to user IDs for demo purposes; specify any `token:userId` pairs for local testing.
    >
-   > **Security note:** `SKINPORT_API_URL` must be an `https://` URL pointing to `api.skinport.com`; other hosts are rejected to avoid accidentally proxying requests to untrusted destinations.
+   > **Security note:** `SKINPORT_API_URL` must target `https://api.skinport.com/v1/items`; other hosts are rejected to avoid proxying to untrusted destinations.
 
-3. Start dependencies (PostgreSQL + Redis):
+3. Start dependencies (PostgreSQL + Redis).
 
    CMD
 
@@ -47,7 +47,7 @@ Simple Fastify server in TypeScript exposing two endpoints:
    docker compose up -d
    ```
 
-4. Apply the schema and seed demo data (inserts are idempotent thanks to unique constraints on usernames and product names):
+4. Apply the schema and seed demo data (idempotent thanks to unique constraints on usernames and product names).
 
    CMD
 
@@ -61,7 +61,7 @@ Simple Fastify server in TypeScript exposing two endpoints:
    Get-Content .\schema.sql | docker compose exec -T postgres psql -U postgres -d skinport
    ```
 
-5. Run the API (development mode):
+5. Run the API in development mode.
 
    CMD
 
@@ -71,7 +71,7 @@ Simple Fastify server in TypeScript exposing two endpoints:
 
    Interactive API docs: http://localhost:3000/docs
 
-6. Production build (do not run dev and prod servers simultaneously):
+6. Build and run in production mode (do not run dev and prod servers simultaneously).
 
    CMD
 
@@ -108,18 +108,25 @@ const data = await response.json();
 
 ## Quick demo with curl
 
-With the default `.env` and seeded data, try the endpoints using the demo API key (`demo_token` maps to user `1`). Be sure to include Brotli compression when hitting `/items`.
+With the default `.env` and seeded data, you can call the endpoints using the demo API key (`demo_token` maps to user `1`). Include Brotli compression when hitting `/items`.
 
 CMD
 
 ```bash
-
+curl --compressed \
+  -H "Accept-Encoding: br" \
+  -H "Authorization: Bearer demo_token" \
+  http://localhost:3000/items
 ```
 
 CMD
 
 ```bash
-curl -X POST -H "Authorization: Bearer demo_token" -H "Content-Type: application/json" -d "{\"productId\":1}" http://localhost:3000/purchase
+curl -X POST \
+  -H "Authorization: Bearer demo_token" \
+  -H "Content-Type: application/json" \
+  -d '{"productId":1}' \
+  http://localhost:3000/purchase
 ```
 
 ## Endpoints
