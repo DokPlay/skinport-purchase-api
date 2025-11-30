@@ -14,9 +14,9 @@ Simple Fastify server in TypeScript exposing two endpoints:
 ## Quick start
 
 1. Install dependencies:
-
+from the project folder
    ```bash 
-   npm install from the project folder
+   npm install 
    ```
 
 2. Configure the environment by copying `.env.example` to `.env` (defaults work for local demos):
