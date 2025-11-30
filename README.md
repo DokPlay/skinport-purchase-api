@@ -11,70 +11,68 @@ Simple Fastify server in TypeScript exposing two endpoints:
 - PostgreSQL
 - Redis
 
-## Getting started
+## Quick start
 
-### 1) Install dependencies
+1. Install dependencies:
 
-```powershell
-npm install
-```
+   ```bash
+   npm install
+   ```
 
-### 2) Configure environment
+2. Configure the environment by copying `.env.example` to `.env` (defaults work for local demos):
 
-Copy `.env.example` to `.env` and adjust if needed (defaults work for local demos):
+   ```bash
+   cp .env.example .env
 
-```powershell
-Copy-Item .env.example .env
+   PORT=3000
+   DATABASE_URL=postgres://postgres:postgres@localhost:5432/skinport
+   REDIS_URL=redis://localhost:6379
+   SKINPORT_API_URL=https://api.skinport.com/v1/items
+   ITEM_CACHE_TTL=300
+   # Demo tokens mapped to user IDs for purchase authentication
+   USER_API_KEYS=demo_token:1,collector_token:2
+   ```
 
-PORT=3000
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/skinport
-REDIS_URL=redis://localhost:6379
-SKINPORT_API_URL=https://api.skinport.com/v1/items
-ITEM_CACHE_TTL=300
-# Demo tokens mapped to user IDs for purchase authentication
-USER_API_KEYS=demo_token:1,collector_token:2
-```
+   > **Auth note:** The Bearer token mapping in `USER_API_KEYS` is a simple demo mechanism to authenticate purchases; populate the variable with any `token:userId` pairs you like for local testing.
+   >
+   > **Security note:** `SKINPORT_API_URL` must be an `https://` URL pointing to `api.skinport.com`; other hosts are rejected to avoid accidentally proxying requests to untrusted destinations.
 
-> **Auth note:** The Bearer token mapping in `USER_API_KEYS` is a simple demo mechanism to authenticate purchases; populate the variable with any `token:userId` pairs you like for local testing.
->
-> **Security note:** `SKINPORT_API_URL` must be an `https://` URL pointing to `api.skinport.com`; other hosts are rejected to avoid accidentally proxying requests to untrusted destinations.
+3. Start dependencies (PostgreSQL + Redis):
 
-### 3) Start local services
+   ```bash
+   docker compose up -d
+   ```
 
-Spin up PostgreSQL and Redis with Docker Compose:
+4. Apply the schema and seed demo data (inserts are idempotent thanks to unique constraints on usernames and product names):
 
-```powershell
-docker compose up -d
-```
+   ```bash
+   docker compose exec -T postgres psql -U postgres -d skinport < schema.sql
+   ```
 
-Apply the schema and seed demo data (inserts are idempotent thanks to unique constraints on usernames and product names):
+   **Windows (PowerShell):**
 
-```powershell
-# PowerShell needs a pipe instead of input redirection
-Get-Content ./schema.sql | docker compose exec -T postgres psql -U postgres -d skinport
-```
+   ```powershell
+   Get-Content .\schema.sql | docker compose exec -T postgres psql -U postgres -d skinport
+   ```
 
-### 4) Run the app
+5. Run the API (development mode):
 
-Development mode:
+   ```bash
+   npm run dev
+   ```
 
-```bash
-npm run dev
-```
+   Interactive API docs:
 
-Interactive API docs:
+   ```bash
+   open http://localhost:3000/docs
+   ```
 
-```bash
-open http://localhost:3000/docs
-```
+   Production build:
 
-Production build:
-
-```bash
-npm run build
-npm start
-```
-
+   ```bash
+   npm run build
+   npm start
+   ```
 ## Quick demo with curl
 
 With the default `.env` and seeded data, try the endpoints using the demo API key (`demo_token` maps to user `1`):
