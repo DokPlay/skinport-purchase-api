@@ -16,6 +16,7 @@ export interface ItemPriceSummary {
 }
 
 const ITEMS_CACHE_KEY = 'items:min-prices';
+const SKINPORT_FETCH_TIMEOUT_MS = 10_000;
 
 const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 
@@ -77,21 +78,34 @@ const aggregatePrices = (items: SkinportItem[]): ItemPriceSummary[] => {
 
 // Fetch item prices from Skinport and return a normalised summary.
 const fetchItemPrices = async (): Promise<ItemPriceSummary[]> => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), SKINPORT_FETCH_TIMEOUT_MS);
+
   const url = `${env.skinportApiUrl}?app_id=730&currency=EUR`;
-  const response = await fetch(url);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
 
-  if (!response.ok) {
-    throw new Error(`Skinport API responded with ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Skinport API responded with ${response.status}`);
+    }
+
+    const payload = await response.json();
+    const items = normalizeItems(payload);
+
+    if (items.length === 0) {
+      throw new Error('No valid items returned from Skinport API');
+    }
+
+    return aggregatePrices(items);
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Skinport API request timed out');
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  const payload = await response.json();
-  const items = normalizeItems(payload);
-
-  if (items.length === 0) {
-    throw new Error('No valid items returned from Skinport API');
-  }
-
-  return aggregatePrices(items);
 };
 
 // Expose an endpoint to read cached item prices, falling back to live API data when needed.
