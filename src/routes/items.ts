@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import type { RedisClientType } from 'redis';
 import { env } from '../env.js';
 import { getRedisClient } from '../redisClient.js';
 
@@ -95,13 +96,19 @@ const fetchItemPrices = async (): Promise<ItemPriceSummary[]> => {
 
 // Expose an endpoint to read cached item prices, falling back to live API data when needed.
 export const registerItemRoutes = async (fastify: FastifyInstance): Promise<void> => {
-  const redis = getRedisClient();
+  let redis: RedisClientType | null = null;
+
+  try {
+    redis = await getRedisClient();
+  } catch (error) {
+    fastify.log.warn({ err: error }, 'Redis unavailable; continuing without cache');
+  }
 
   fastify.get('/items', async (request, reply) => {
     let cachedItems: ItemPriceSummary[] | null = null;
 
     try {
-      const cached = await redis.get(ITEMS_CACHE_KEY);
+      const cached = await redis?.get(ITEMS_CACHE_KEY);
 
       if (cached) {
         cachedItems = JSON.parse(cached) as ItemPriceSummary[];
@@ -117,12 +124,14 @@ export const registerItemRoutes = async (fastify: FastifyInstance): Promise<void
     try {
       const items = await fetchItemPrices();
 
-      try {
-        await redis.set(ITEMS_CACHE_KEY, JSON.stringify(items), {
-          EX: env.cacheTtlSeconds
-        });
-      } catch (error) {
-        fastify.log.warn({ err: error }, 'Failed to write items to Redis cache');
+      if (redis) {
+        try {
+          await redis.set(ITEMS_CACHE_KEY, JSON.stringify(items), {
+            EX: env.cacheTtlSeconds
+          });
+        } catch (error) {
+          fastify.log.warn({ err: error }, 'Failed to write items to Redis cache');
+        }
       }
 
       return items;
