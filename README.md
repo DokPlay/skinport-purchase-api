@@ -13,8 +13,8 @@ Simple Fastify server in TypeScript exposing two endpoints:
 
 ## Quick start
 
-1. Install dependencies:
-from the project folder
+1. Install dependencies:from the project folder
+
    ```bash 
    npm install 
    ```
