@@ -20,6 +20,16 @@ interface DbProduct {
 // Guard helper to ensure IDs are positive integers before hitting the database.
 const isValidId = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value > 0;
 
+const parseNumeric = (value: unknown): number => {
+  const numeric = typeof value === 'string' ? Number(value) : value;
+
+  if (typeof numeric !== 'number' || Number.isNaN(numeric) || !Number.isFinite(numeric)) {
+    throw new Error('INVALID_DATA');
+  }
+
+  return numeric;
+};
+
 // Expose a transactional purchase endpoint that debits balance and records the purchase atomically.
 export const registerPurchaseRoutes = async (fastify: FastifyInstance): Promise<void> => {
   const db = getDbClient();
@@ -58,28 +68,23 @@ export const registerPurchaseRoutes = async (fastify: FastifyInstance): Promise<
             throw new Error('PRODUCT_NOT_FOUND');
           }
 
-          const balance = Number(user.balance);
-          const price = Number(product.price);
-
-          if (Number.isNaN(balance) || Number.isNaN(price)) {
-            throw new Error('INVALID_DATA');
-          }
+          const balance = parseNumeric(user.balance);
+          const price = parseNumeric(product.price);
 
           if (balance < price) {
             throw new Error('INSUFFICIENT_FUNDS');
           }
 
           const [newBalance] = await tx<DbUser[]>`update users set balance = balance - ${price} where id = ${userId} returning id, balance`;
+          if (!newBalance) {
+            throw new Error('INVALID_DATA');
+          }
           await tx`insert into purchases (user_id, product_id, price_paid) values (${userId}, ${productId}, ${price})`;
 
           return newBalance;
         });
 
-        const updatedBalance = Number(updatedUser?.balance);
-
-        if (!Number.isFinite(updatedBalance)) {
-          throw new Error('INVALID_DATA');
-        }
+        const updatedBalance = parseNumeric(updatedUser.balance);
 
         return { userId, balance: updatedBalance };
       } catch (error) {

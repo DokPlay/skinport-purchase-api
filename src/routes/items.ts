@@ -125,7 +125,14 @@ export const registerItemRoutes = async (fastify: FastifyInstance): Promise<void
       const cached = await redis?.get(ITEMS_CACHE_KEY);
 
       if (cached) {
-        cachedItems = JSON.parse(cached) as ItemPriceSummary[];
+        try {
+          cachedItems = JSON.parse(cached) as ItemPriceSummary[];
+        } catch (error) {
+          fastify.log.warn({ err: error }, 'Failed to parse cached items; purging cache key');
+          if (redis) {
+            await redis.del(ITEMS_CACHE_KEY);
+          }
+        }
       }
     } catch (error) {
       fastify.log.warn({ err: error }, 'Failed to read from Redis cache');
