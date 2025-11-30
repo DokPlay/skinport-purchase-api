@@ -29,7 +29,7 @@ SKINPORT_API_URL=https://api.skinport.com/v1/items
 ITEM_CACHE_TTL=300
 ```
 
-Apply the schema and seed demo data:
+Apply the schema and seed demo data (the inserts are idempotent thanks to unique constraints on usernames and product names):
 
 ```bash
 psql "$DATABASE_URL" -f schema.sql
