@@ -1,0 +1,27 @@
+[
+  {
+    "market_hash_name": "AK-47 | Redline (Field-Tested)",
+    "min_price": 12.34,
+    "tradable": true
+  },
+  {
+    "market_hash_name": "AK-47 | Redline (Field-Tested)",
+    "min_price": 10.5,
+    "tradable": false
+  },
+  {
+    "market_hash_name": "AWP | Sun in Leo (Minimal Wear)",
+    "min_price": 3.75,
+    "tradable": true
+  },
+  {
+    "market_hash_name": "AWP | Sun in Leo (Minimal Wear)",
+    "min_price": 4.1,
+    "tradable": false
+  },
+  {
+    "market_hash_name": "Desert Eagle | Bronze Deco (Factory New)",
+    "min_price": 1.25,
+    "tradable": true
+  }
+]

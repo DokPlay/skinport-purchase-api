@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import type { RedisClientType } from 'redis';
 import { env } from '../env.js';
@@ -21,6 +22,7 @@ interface ErrorResponse {
 
 const ITEMS_CACHE_KEY = 'items:min-prices';
 const SKINPORT_FETCH_TIMEOUT_MS = 10_000;
+const SAMPLE_ITEMS_PATH = new URL('../data/sample-items.json', import.meta.url);
 
 const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 
@@ -80,6 +82,24 @@ const aggregatePrices = (items: SkinportItem[]): ItemPriceSummary[] => {
   return Array.from(map.values());
 };
 
+const loadFallbackItems = async (logger: FastifyBaseLogger): Promise<ItemPriceSummary[]> => {
+  try {
+    const raw = await readFile(SAMPLE_ITEMS_PATH, 'utf8');
+    const parsed = JSON.parse(raw) as unknown;
+    const items = normalizeItems(parsed);
+
+    if (items.length === 0) {
+      throw new Error('Sample file contained no valid items');
+    }
+
+    logger.warn('Using bundled Skinport sample data because live fetch failed');
+    return aggregatePrices(items);
+  } catch (error) {
+    logger.error({ err: error }, 'Failed to load Skinport sample data');
+    throw error;
+  }
+};
+
 // Fetch item prices from Skinport and return a normalised summary.
 const fetchItemPrices = async (logger: FastifyBaseLogger): Promise<ItemPriceSummary[]> => {
   const controller = new AbortController();
@@ -117,8 +137,11 @@ const fetchItemPrices = async (logger: FastifyBaseLogger): Promise<ItemPriceSumm
     if (error instanceof Error && error.name === 'AbortError') {
       throw new Error('Skinport API request timed out');
     }
+    if (!env.useSkinportFallback) {
+      throw error;
+    }
 
-    throw error;
+    return loadFallbackItems(logger);
   } finally {
     clearTimeout(timeout);
   }

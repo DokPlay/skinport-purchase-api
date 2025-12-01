@@ -31,14 +31,17 @@
    REDIS_URL=redis://localhost:6379
    SKINPORT_API_URL=https://api.skinport.com/v1/items
    SKINPORT_USER_AGENT=skinport-purchase-api/1.0 (+https://github.com/user/skinport-purchase-api)
+   USE_SKINPORT_FALLBACK=true
    ITEM_CACHE_TTL=300
    # Демонстрационные токены, сопоставление токен → userId
    USER_API_KEYS=demo_token:1,collector_token:2
    ```
 
-   > **Аутентификация:** `USER_API_KEYS` — простая демо-схема сопоставления Bearer-токенов с userId. Укажите любые пары `токен:userId` для локального теста.
-   >
-   > **Безопасность:** `SKINPORT_API_URL` должен указывать на `https://api.skinport.com/v1/items`; другие хосты отклоняются, чтобы не проксировать запросы на непроверённые адреса.
+> **Аутентификация:** `USER_API_KEYS` — простая демо-схема сопоставления Bearer-токенов с userId. Укажите любые пары `токен:userId` для локального теста.
+>
+> **Безопасность:** `SKINPORT_API_URL` должен указывать на `https://api.skinport.com/v1/items`; другие хосты отклоняются, чтобы не проксировать запросы на непроверённые адреса.
+>
+> **Оффлайн:** если `USE_SKINPORT_FALLBACK` стоит в `true` (по умолчанию), при ошибке запроса к Skinport API вернутся встроенные демонстрационные цены — удобно для CI и сетей с блокировками.
 
 3. Запустите PostgreSQL и Redis.
 

@@ -48,6 +48,20 @@ const positiveInteger = (value: string | undefined, name: string, fallback: stri
   return parsed;
 };
 
+const booleanFlag = (value: string | undefined, name: string, fallback: string): boolean => {
+  const normalized = required(value, name, fallback).trim().toLowerCase();
+
+  if (normalized === 'true' || normalized === '1') {
+    return true;
+  }
+
+  if (normalized === 'false' || normalized === '0') {
+    return false;
+  }
+
+  throw new Error(`${name} must be a boolean-like value (true/false)`);
+};
+
 const parseApiKeyMappings = (
   value: string | undefined,
   name: string,
@@ -100,5 +114,6 @@ export const env = {
   redisUrl: required(process.env.REDIS_URL, 'REDIS_URL', 'redis://localhost:6379'),
   databaseUrl: required(process.env.DATABASE_URL, 'DATABASE_URL', 'postgres://postgres:postgres@localhost:5432/skinport'),
   cacheTtlSeconds: positiveInteger(process.env.ITEM_CACHE_TTL, 'ITEM_CACHE_TTL', '300'),
-  userApiKeys: parseApiKeyMappings(process.env.USER_API_KEYS, 'USER_API_KEYS')
+  userApiKeys: parseApiKeyMappings(process.env.USER_API_KEYS, 'USER_API_KEYS'),
+  useSkinportFallback: booleanFlag(process.env.USE_SKINPORT_FALLBACK, 'USE_SKINPORT_FALLBACK', 'true')
 };
