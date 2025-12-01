@@ -118,13 +118,25 @@ const fetchItemPrices = async (logger: FastifyBaseLogger): Promise<ItemPriceSumm
         Accept: 'application/json',
         'Accept-Language': 'en-US,en;q=0.9',
         'Cache-Control': 'no-cache',
-        'User-Agent': env.skinportUserAgent
+        'User-Agent': env.skinportUserAgent,
+        Referer: 'https://skinport.com/',
+        Origin: 'https://skinport.com',
+        'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"Windows"',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-origin'
       }
     });
 
     if (!response.ok) {
-      logger.error({ status: response.status, statusText: response.statusText }, 'Skinport API error');
-      throw new Error(`Skinport API responded with ${response.status}`);
+      const errorBody = await response.text();
+      logger.error(
+        { status: response.status, statusText: response.statusText, body: errorBody },
+        'Skinport API error'
+      );
+      throw new Error(`Skinport API responded with ${response.status} - ${errorBody || 'no body returned'}`);
     }
 
     const payload = await response.json();
