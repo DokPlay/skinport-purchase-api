@@ -114,6 +114,8 @@ export const env = {
   redisUrl: required(process.env.REDIS_URL, 'REDIS_URL', 'redis://localhost:6379'),
   databaseUrl: required(process.env.DATABASE_URL, 'DATABASE_URL', 'postgres://postgres:postgres@localhost:5432/skinport'),
   cacheTtlSeconds: positiveInteger(process.env.ITEM_CACHE_TTL, 'ITEM_CACHE_TTL', '300'),
-  userApiKeys: parseApiKeyMappings(process.env.USER_API_KEYS, 'USER_API_KEYS'),
+  // Provide a sensible default token for local development so the server
+  // can boot without extra configuration while still validating input.
+  userApiKeys: parseApiKeyMappings(process.env.USER_API_KEYS, 'USER_API_KEYS', 'demo_token:1'),
   useSkinportFallback: booleanFlag(process.env.USE_SKINPORT_FALLBACK, 'USE_SKINPORT_FALLBACK', 'true')
 };

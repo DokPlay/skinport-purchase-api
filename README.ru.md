@@ -33,7 +33,7 @@
    SKINPORT_USER_AGENT=skinport-purchase-api/1.0 (+https://github.com/user/skinport-purchase-api)
    USE_SKINPORT_FALLBACK=true
    ITEM_CACHE_TTL=300
-   USER_API_KEYS=test-token:1
+   USER_API_KEYS=demo_token:1
    '@ | Set-Content .env
    ```
 
