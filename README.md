@@ -9,7 +9,7 @@ A compact Fastify service written in strict TypeScript with two core endpoints:
 
 ## Requirements
 
-- Node.js 18+
+- Node.js 20+
 - PostgreSQL
 - Redis
 
@@ -33,14 +33,11 @@ A compact Fastify service written in strict TypeScript with two core endpoints:
    SKINPORT_USER_AGENT=skinport-purchase-api/1.0 (+https://github.com/user/skinport-purchase-api)
    USE_SKINPORT_FALLBACK=true
    ITEM_CACHE_TTL=300
-   # Demo tokens mapped to user IDs for purchase authentication
-   USER_API_KEYS=demo_token:1,collector_token:2
+   USER_API_KEYS=
    ```
 
-> **Auth note:** The `USER_API_KEYS` variable maps Bearer tokens to user IDs for demo purposes; specify any `token:userId` pairs for local testing.
->
 > **Security note:** `SKINPORT_API_URL` must target `https://api.skinport.com/v1/items`; other hosts are rejected to avoid proxying to untrusted destinations.
->
+
 > **Offline note:** When `USE_SKINPORT_FALLBACK` is `true` (default), the API will return bundled sample prices if the live Skinport request fails (useful in CI or networks where the API is blocked).
 
 3. Start dependencies (PostgreSQL + Redis).
@@ -108,40 +105,7 @@ if (!response.ok) {
 const data = await response.json();
 ```
 
-> **Tip:** Older cURL builds (notably on Windows) may not support Brotli. Use Node 18+ (which supports Brotli by default) or a cURL build with `--compressed` + `-H "Accept-Encoding: br"` on platforms that support it.
-
-## Quick demo with curl
-
-With the default `.env` and seeded data, you can call the endpoints using the demo API key (`demo_token` maps to user `1`). Include Brotli compression when hitting `/items`.
-
-CMD
-
-   ```bash
-   curl --compressed \
-     -H "Accept-Encoding: br" \
-     -H "Authorization: Bearer demo_token" \
-  http://localhost:3000/items
-```
-
-CMD
-
-```bash
-curl -X POST \
-  -H "Authorization: Bearer demo_token" \
-  -H "Content-Type: application/json" \
-  -d '{"productId":1}' \
-  http://localhost:3000/purchase
-```
-
-> **Windows cURL tip:** Use double quotes around the JSON body instead of single quotes:
->
-> ```powershell
-> curl -X POST \
->   -H "Authorization: Bearer demo_token" \
->   -H "Content-Type: application/json" \
->   -d "{\"productId\":1}" \
->   http://localhost:3000/purchase
-> ```
+> **Tip:** Older cURL builds (notably on Windows) may not support Brotli. Use Node 20+ (which supports Brotli by default) or a cURL build with `--compressed` + `-H "Accept-Encoding: br"` on platforms that support it.
 
 ## Endpoints
 

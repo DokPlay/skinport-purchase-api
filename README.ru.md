@@ -9,7 +9,7 @@
 
 ## Требования
 
-- Node.js 18+
+- Node.js 20+
 - PostgreSQL
 - Redis
 
@@ -33,14 +33,11 @@
    SKINPORT_USER_AGENT=skinport-purchase-api/1.0 (+https://github.com/user/skinport-purchase-api)
    USE_SKINPORT_FALLBACK=true
    ITEM_CACHE_TTL=300
-   # Демонстрационные токены, сопоставление токен → userId
-   USER_API_KEYS=demo_token:1,collector_token:2
+   USER_API_KEYS=
    ```
 
-> **Аутентификация:** `USER_API_KEYS` — простая демо-схема сопоставления Bearer-токенов с userId. Укажите любые пары `токен:userId` для локального теста.
->
 > **Безопасность:** `SKINPORT_API_URL` должен указывать на `https://api.skinport.com/v1/items`; другие хосты отклоняются, чтобы не проксировать запросы на непроверённые адреса.
->
+
 > **Оффлайн:** если `USE_SKINPORT_FALLBACK` стоит в `true` (по умолчанию), при ошибке запроса к Skinport API вернутся встроенные демонстрационные цены — удобно для CI и сетей с блокировками.
 
 3. Запустите PostgreSQL и Redis.
@@ -108,40 +105,7 @@ if (!response.ok) {
 const data = await response.json();
 ```
 
-> **Совет:** Старые сборки cURL (особенно на Windows) могут не поддерживать Brotli. Используйте Node 18+ или cURL с поддержкой Brotli (`--compressed` + `-H "Accept-Encoding: br"`).
-
-## Небольшое демо через curl
-
-С дефолтным `.env` и сидом можно вызвать эндпоинты через демо-ключ (`demo_token` → пользователь `1`). Для `/items` добавьте Brotli.
-
-CMD
-
-```bash
-curl --compressed \
-  -H "Accept-Encoding: br" \
-  -H "Authorization: Bearer demo_token" \
-  http://localhost:3000/items
-```
-
-CMD
-
-```bash
-curl -X POST \
-  -H "Authorization: Bearer demo_token" \
-  -H "Content-Type: application/json" \
-  -d '{"productId":1}' \
-  http://localhost:3000/purchase
-```
-
-> **Совет для Windows cURL:** Используйте двойные кавычки вокруг JSON-тела вместо одинарных:
->
-> ```powershell
-> curl -X POST \
->   -H "Authorization: Bearer demo_token" \
->   -H "Content-Type: application/json" \
->   -d "{\"productId\":1}" \
->   http://localhost:3000/purchase
-> ```
+> **Совет:** Старые сборки cURL (особенно на Windows) могут не поддерживать Brotli. Используйте Node 20+ или cURL с поддержкой Brotli (`--compressed` + `-H "Accept-Encoding: br"`).
 
 ## Эндпоинты
 
