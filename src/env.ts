@@ -109,7 +109,9 @@ export const env = {
   skinportUserAgent: required(
     process.env.SKINPORT_USER_AGENT,
     'SKINPORT_USER_AGENT',
-    'skinport-purchase-api/1.0 (+https://github.com/user/skinport-purchase-api)'
+    // Use a browser-like default user agent to avoid Cloudflare bot challenges when
+    // calling the public Skinport endpoint from server-side environments.
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
   ),
   redisUrl: required(process.env.REDIS_URL, 'REDIS_URL', 'redis://localhost:6379'),
   databaseUrl: required(process.env.DATABASE_URL, 'DATABASE_URL', 'postgres://postgres:postgres@localhost:5432/skinport'),

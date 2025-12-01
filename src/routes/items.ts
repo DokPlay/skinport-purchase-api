@@ -116,6 +116,8 @@ const fetchItemPrices = async (logger: FastifyBaseLogger): Promise<ItemPriceSumm
       headers: {
         'Accept-Encoding': 'br',
         Accept: 'application/json',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cache-Control': 'no-cache',
         'User-Agent': env.skinportUserAgent
       }
     });
