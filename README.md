@@ -107,6 +107,15 @@ const data = await response.json();
 ### `GET /items`
 Returns an array with minimal prices for tradable and non-tradable variants of each Skinport item. Responses are cached in Redis for `ITEM_CACHE_TTL` seconds.
 
+**PowerShell-ready example (note the explicit `curl.exe` to avoid the `curl` alias):**
+
+```powershell
+curl.exe --compressed `
+  -H "Accept-Encoding: br" `
+  -H "Authorization: Bearer demo_token" `
+  "http://localhost:3000/items"
+```
+
 ### `POST /purchase`
 Headers:
 
@@ -119,6 +128,27 @@ Body:
 ```
 
 Performs a transactional purchase on behalf of the authenticated user, deducts the product price from the user balance, records the purchase, and responds with the updated balance.
+
+**PowerShell-ready examples:**
+
+- Using `curl.exe` (keep the JSON body in single quotes):
+
+  ```powershell
+  curl.exe -X POST `
+    -H "Authorization: Bearer demo_token" `
+    -H "Content-Type: application/json" `
+    -d '{"productId":1}' `
+    "http://localhost:3000/purchase"
+  ```
+
+- Using `Invoke-RestMethod` without cURL:
+
+  ```powershell
+  Invoke-RestMethod -Method Post -Uri "http://localhost:3000/purchase" `
+    -Headers @{ Authorization = "Bearer demo_token" } `
+    -ContentType "application/json" `
+    -Body '{"productId":1}'
+  ```
 
 ## POST requests in Postman
 

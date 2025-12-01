@@ -107,6 +107,15 @@ const data = await response.json();
 ### `GET /items`
 Возвращает минимальные цены для трейдабельных и нетрейдабельных предметов Skinport. Ответ кешируется в Redis на `ITEM_CACHE_TTL` секунд.
 
+**Готовый пример под PowerShell (используем именно `curl.exe`, чтобы не попасть на алиас `curl` → `Invoke-WebRequest`):**
+
+```powershell
+curl.exe --compressed `
+  -H "Accept-Encoding: br" `
+  -H "Authorization: Bearer demo_token" `
+  "http://localhost:3000/items"
+```
+
 ### `POST /purchase`
 Заголовок:
 
@@ -119,6 +128,27 @@ const data = await response.json();
 ```
 
 Эндпоинт проводит транзакцию покупки, списывает стоимость с баланса пользователя, сохраняет запись и возвращает обновлённый баланс.
+
+**Готовые примеры под PowerShell:**
+
+- Через `curl.exe` (JSON-тело в одинарных кавычках):
+
+  ```powershell
+  curl.exe -X POST `
+    -H "Authorization: Bearer demo_token" `
+    -H "Content-Type: application/json" `
+    -d '{"productId":1}' `
+    "http://localhost:3000/purchase"
+  ```
+
+- Через `Invoke-RestMethod`, если хочется «по-пауэршелльному» без cURL:
+
+  ```powershell
+  Invoke-RestMethod -Method Post -Uri "http://localhost:3000/purchase" `
+    -Headers @{ Authorization = "Bearer demo_token" } `
+    -ContentType "application/json" `
+    -Body '{"productId":1}'
+  ```
 
 ## POST-запросы в Postman
 
