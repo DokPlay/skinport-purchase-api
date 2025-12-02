@@ -3,4 +3,7 @@ node_modules
 *.log
 npm-debug.log*
 .env
+.env.test
 dist
+server.pid
+.vscode
