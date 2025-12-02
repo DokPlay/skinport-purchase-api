@@ -1,7 +1,7 @@
 import postgres, { Sql } from 'postgres';
 import { env } from './env.js';
 
-export type DbClient = Sql<{}>;
+export type DbClient = Sql<Record<string, unknown>>;
 
 let client: DbClient | null = null;
 
@@ -12,7 +12,7 @@ export const getDbClient = (): DbClient => {
   }
 
   client = postgres(env.databaseUrl, {
-    max: 10
+    max: 10,
   });
 
   return client;
