@@ -13,5 +13,13 @@ export default defineConfig({
       DATABASE_URL: process.env.DATABASE_URL || 'postgres://postgres:postgres@127.0.0.1:5432/skinport',
       REDIS_URL: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
     },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      statements: 80,
+      branches: 80,
+      functions: 80,
+      lines: 80,
+    },
   },
 });

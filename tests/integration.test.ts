@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { buildServer } from '../src/index.js';
 import postgres from 'postgres';
 import { createClient, RedisClientType } from 'redis';
 
-vi.setConfig({ hookTimeout: 40000 });
+vi.setConfig({ hookTimeout: 60000 });
 
 const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:3000';
 const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
@@ -11,6 +12,7 @@ const DATABASE_URL =
 
 let sql: ReturnType<typeof postgres> | null = null;
 let redis: RedisClientType | null = null;
+let server: ReturnType<typeof buildServer> | null = null;
 
 const waitFor = async (fn: () => Promise<boolean>, timeoutMs = 30000, interval = 500) => {
   const start = Date.now();
@@ -26,6 +28,10 @@ const waitFor = async (fn: () => Promise<boolean>, timeoutMs = 30000, interval =
 };
 
 beforeAll(async () => {
+  // Start Fastify server for integration tests
+  server = buildServer();
+  await server.listen({ port: 3000, host: '127.0.0.1' });
+
   // wait for HTTP server
   await waitFor(async () => {
     try {
@@ -37,7 +43,7 @@ beforeAll(async () => {
     } catch (e) {
       return false;
     }
-  }, 30000);
+  }, 60000);
 
   // connect to DB and redis
   sql = postgres(DATABASE_URL, { max: 2 });
@@ -53,6 +59,11 @@ afterAll(async () => {
   }
   try {
     await sql?.end({ timeout: 1_000 });
+  } catch {
+    /* ignore - best-effort cleanup */
+  }
+  try {
+    await server?.close();
   } catch {
     /* ignore - best-effort cleanup */
   }

@@ -193,12 +193,35 @@ Example setup for `POST /purchase`:
    ```
 4. Send the request to receive the updated balance after the purchase is processed.
 
-**Copy-paste ready example (uses the demo token):**
 
-```
-POST http://localhost:3000/purchase
-Authorization: Bearer demo_token
-Content-Type: application/json
+## Updating & Migration
 
-{ "productId": 2 }
-```
+### Updating from previous versions
+
+- **Dependencies:**  
+  Run `npm install` after pulling updates to ensure all new dependencies (e.g., `@vitest/coverage-v8`, `c8`, Husky, lint-staged) are installed.
+
+- **Environment:**  
+  If you use CI or local scripts, ensure your `.env` matches the new defaults.  
+  Redis and PostgreSQL must be running for integration tests and development.
+
+- **Testing:**  
+  Integration tests now start the Fastify server automatically.  
+  Redis and Postgres must be available locally (or via Docker).  
+  For full isolation, consider using Testcontainers (see TODO).
+
+- **Security & Automation:**  
+  - Dependabot and CodeQL are enabled for automated security checks.
+  - Linting, formatting, and coverage enforcement are now part of CI.
+
+### Migration steps
+
+1. Pull the latest code.
+2. Run `npm install`.
+3. (Optional) Recreate `.env` from `.env.example` if new variables are added.
+4. Start dependencies: `docker compose up -d`
+5. Apply schema:  
+   `Get-Content .\schema.sql | docker compose exec -T postgres psql -U postgres -d skinport`
+6. Run tests:  
+   `npm run test:coverage`
+7. Review CI status and security alerts in GitHub.

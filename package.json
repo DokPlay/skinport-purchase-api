@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "test": "vitest run",
-    "test:integration": "vitest run tests/integration.test.ts",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint \"src/**/*.{ts,js}\" \"tests/**/*.{ts,js}\" --ext .ts,.js",
     "format": "prettier --write .",
     "prepare": "husky install"
@@ -22,18 +22,19 @@
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
+    "@typescript-eslint/eslint-plugin": "^6.8.0",
+    "@typescript-eslint/parser": "^6.8.0",
+    "@vitest/coverage-v8": "^4.0.14",
+    "c8": "^8.0.0",
+    "eslint": "^8.50.0",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^13.0.0",
+    "prettier": "^3.0.0",
     "tsx": "^4.19.2",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.14",
-    "eslint": "^8.50.0",
-    "@typescript-eslint/parser": "^6.8.0",
-    "@typescript-eslint/eslint-plugin": "^6.8.0",
-    "eslint-config-prettier": "^9.1.0",
-    "prettier": "^3.0.0",
-    "husky": "^8.0.0",
-    "lint-staged": "^13.0.0"
-  }
-  ,
+    "vitest": "^4.0.14"
+  },
   "lint-staged": {
     "src/**/*.{ts,js}": [
       "eslint --fix",
