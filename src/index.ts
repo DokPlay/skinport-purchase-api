@@ -1,4 +1,7 @@
 import Fastify from 'fastify';
+import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { closeDbClient } from './db.js';
@@ -11,21 +14,35 @@ import { registerPurchaseRoutes } from './routes/purchase.js';
 const buildServer = () => {
   const server = Fastify({ logger: true });
 
+  // Security headers
+  void server.register(helmet);
+
+  // Rate limiting
+  void server.register(rateLimit, {
+    max: 100,
+    timeWindow: '1 minute',
+  });
+
+  // CORS
+  void server.register(cors, {
+    origin: true, // Reflect the request origin
+  });
+
   server.get('/health', async () => ({ status: 'ok' }));
   void server.register(swagger, {
     openapi: {
       info: {
         title: 'Skinport Purchase API',
         description: 'API for caching Skinport item prices and processing demo purchases',
-        version: '1.0.0'
-      }
-    }
+        version: '1.0.0',
+      },
+    },
   });
   void server.register(swaggerUi, {
     routePrefix: '/docs',
     uiConfig: {
-      docExpansion: 'list'
-    }
+      docExpansion: 'list',
+    },
   });
   server.register(registerItemRoutes);
   server.register(registerPurchaseRoutes);
