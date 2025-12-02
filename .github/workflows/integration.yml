@@ -1,0 +1,67 @@
+name: Integration tests
+
+on:
+  push:
+    branches: [ main, port-api ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: skinport
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 2s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 2s --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Wait for services
+        run: |
+          # wait for Postgres
+          for i in {1..30}; do
+            docker exec $(docker ps -q --filter ancestor=postgres:16-alpine) pg_isready -U postgres && break || sleep 1
+          done
+          # wait for Redis
+          for i in {1..30}; do
+            docker exec $(docker ps -q --filter ancestor=redis:7-alpine) redis-cli ping && break || sleep 1
+          done
+
+      - name: Apply DB schema
+        run: |
+          docker exec -i $(docker ps -q --filter ancestor=postgres:16-alpine) psql -U postgres -d skinport < schema.sql
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run integration tests
+        env:
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/skinport
+          REDIS_URL: redis://127.0.0.1:6379
+          BASE_URL: http://127.0.0.1:3000
+        run: |
+          # start the app in background
+          npm run dev &
+          # give the app some time to start
+          n=0; until curl -sSf http://127.0.0.1:3000/items || [ $n -ge 30 ]; do sleep 1; n=$((n+1)); done
+          npm run test:integration
